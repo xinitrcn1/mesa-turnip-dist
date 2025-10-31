@@ -1,0 +1,272 @@
+From 058ff8853b11c993bf44088e79c26bbc7b123e94 Mon Sep 17 00:00:00 2001
+From: lizzie <lizzie@eden-emu.dev>
+Date: Fri, 31 Oct 2025 22:06:34 +0000
+Subject: [PATCH] util: Remove debug functionality
+
+---
+ src/util/u_debug.c |   3 +
+ src/util/u_debug.h | 194 +++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 192 insertions(+), 5 deletions(-)
+
+diff --git a/src/util/u_debug.c b/src/util/u_debug.c
+index 96f7cca..b1b2c67 100644
+--- a/src/util/u_debug.c
++++ b/src/util/u_debug.c
+@@ -42,6 +42,7 @@
+ #include <stdlib.h>
+ #endif
+ 
++#if MESA_DEBUG
+ 
+ void
+ _debug_vprintf(const char *format, va_list ap)
+@@ -537,3 +538,5 @@ dump_debug_control_string(char *output,
+       }
+    }
+ }
++
++#endif
+diff --git a/src/util/u_debug.h b/src/util/u_debug.h
+index 50b45f5..37f3013 100644
+--- a/src/util/u_debug.h
++++ b/src/util/u_debug.h
+@@ -104,8 +104,17 @@ struct util_debug_callback
+ 
+ #define _util_printf_format(fmt, list) PRINTFLIKE(fmt, list)
+ 
+-void _debug_vprintf(const char *format, va_list ap);
+-
++#if MESA_DEBUG
++void
++_debug_vprintf(const char *format, va_list ap);
++#else
++static void
++_debug_vprintf(const char *format, va_list ap)
++{
++   (void) format;
++   (void) ap;
++}
++#endif
+ 
+ static inline void
+ _debug_printf(const char *format, ...)
+@@ -187,10 +196,18 @@ debug_disable_win32_error_dialogs(void);
+ #define debug_break() ((void)0)
+ #endif /* MESA_DEBUG */
+ 
+-
++#if MESA_DEBUG
+ void
+ debug_get_version_option(const char *name, unsigned *major, unsigned *minor);
+-
++#else
++static void
++debug_get_version_option(const char *name, unsigned *major, unsigned *minor)
++{
++   (void) name;
++   (void) major;
++   (void) minor;
++}
++#endif
+ 
+ /**
+  * Output the current function name.
+@@ -268,13 +285,27 @@ debug_get_version_option(const char *name, unsigned *major, unsigned *minor);
+                         fmt, ##__VA_ARGS__); \
+ } while (0)
+ 
++#if MESA_DEBUG
+ void
+ _util_debug_message(
+    struct util_debug_callback *cb,
+    unsigned *id,
+    enum util_debug_type type,
+    const char *fmt, ...) _util_printf_format(4, 5);
+-
++#else
++static void
++_util_debug_message(
++   struct util_debug_callback *cb,
++   unsigned *id,
++   enum util_debug_type type,
++   const char *fmt, ...)
++{
++   (void) cb;
++   (void) id;
++   (void) type;
++   (void) fmt;
++}
++#endif
+ 
+ /**
+  * Used by debug_dump_enum and debug_dump_flags to describe symbols.
+@@ -310,6 +341,7 @@ struct debug_named_value
+ #define DEBUG_NAMED_VALUE_WITH_DESCRIPTION(__symbol, __desc) {#__symbol, (uint64_t)__symbol, __desc}
+ #define DEBUG_NAMED_VALUE_END {NULL, 0, NULL}
+ 
++#if MESA_DEBUG
+ 
+ /**
+  * Convert a enum value to a string.
+@@ -385,6 +417,158 @@ debug_get_flags_option(const char *name,
+                        const struct debug_named_value *flags,
+                        uint64_t dfault);
+ 
++#else
++
++/**
++ * Convert a enum value to a string.
++ */
++static const char *
++debug_dump_enum(const struct debug_named_value *names,
++                uint64_t value)
++{
++   (void) names;
++   (void) value;
++   return "";
++}
++
++/**
++ * Convert binary flags value to a string.
++ */
++static const char *
++debug_dump_flags(const struct debug_named_value *names,
++                 uint64_t value)
++{
++   (void) names;
++   (void) value;
++   return "";
++}
++
++
++struct debug_control {
++    const char * string;
++    uint64_t     flag;
++};
++
++static uint64_t
++parse_debug_string(const char *debug,
++                   const struct debug_control *control)
++{
++   (void) debug;
++   (void) control;
++   return 0;
++}
++
++
++static uint64_t
++parse_enable_string(const char *debug,
++                    uint64_t default_value,
++                    const struct debug_control *control)
++{
++   (void) debug;
++   (void) default_value;
++   (void) control;
++   return 0;
++}
++
++static void
++dump_debug_control_string(char *output,
++                          size_t max_size,
++                          const struct debug_control *control,
++                          uint64_t flags)
++{
++   (void) output;
++   (void) max_size;
++   (void) control;
++   (void) flags;
++}
++
++static bool
++comma_separated_list_contains(const char *list, const char *s)
++{
++   (void) list;
++   (void) s;
++   return 0;
++}
++
++/**
++ * Get option.
++ *
++ * It is an alias for getenv on Unix and Windows.
++ *
++ */
++static const char *
++debug_get_option(const char *name, const char *dfault)
++{
++   (void) name;
++   (void) dfault;
++   return "";
++}
++
++static const char *
++debug_get_option_cached(const char *name, const char *dfault)
++{
++   (void) name;
++   (void) dfault;
++   return "";
++}
++
++static bool
++debug_parse_bool_option(const char *str, bool dfault)
++{
++   (void) str;
++   (void) dfault;
++   return 0;
++}
++
++static bool
++debug_get_bool_option(const char *name, bool dfault)
++{
++   (void) name;
++   (void) dfault;
++   return 0;
++}
++
++static int64_t
++debug_parse_num_option(const char *str, int64_t dfault)
++{
++   (void) str;
++   (void) dfault;
++   return 0;
++}
++
++static int64_t
++debug_get_num_option(const char *name, int64_t dfault)
++{
++   (void) name;
++   (void) dfault;
++   return 0;
++}
++
++static uint64_t
++debug_parse_flags_option(const char *name,
++                         const char *str,
++                         const struct debug_named_value *flags,
++                         uint64_t dfault)
++{
++   (void) name;
++   (void) str;
++   (void) flags;
++   (void) dfault;
++   return 0;
++}
++
++static uint64_t
++debug_get_flags_option(const char *name,
++                       const struct debug_named_value *flags,
++                       uint64_t dfault)
++{
++   (void) name;
++   (void) flags;
++   (void) dfault;
++   return 0;
++}
++#endif
++
+ #define DEBUG_GET_ONCE_OPTION(suffix, name, dfault) \
+ static const char * \
+ debug_get_option_ ## suffix (void) \
+-- 
+2.51.0
+

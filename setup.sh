@@ -60,5 +60,6 @@ cat <<EOF >"meta.json"
 }
 EOF
 tar -a -cf "mesa-turnip-$NDK_VER-$SDK_VER.tar.xz" vulkan.adreno.so meta.json || exit
-tar -tvf "mesa-turnip-$NDK_VER-$SDK_VER.tar.xz"
+tar -tvf "mesa-turnip-$NDK_VER-$SDK_VER.tar.xz" || exit
+zip "mesa-turnip-$NDK_VER-$SDK_VER.zip" vulkan.adreno.so meta.json || exit
 #rm vulkan.adreno.so meta.json
