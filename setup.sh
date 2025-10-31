@@ -39,7 +39,7 @@ cd mesa && meson setup "$MESA_BUILD_DIR" \
     -Dvulkan-drivers=freedreno -Dfreedreno-kmds=kgsl \
     -Db_lto=true -Db_lto_mode=default \
     -Db_ndebug=true -Degl=disabled \
-    -Dstrip=true || exit
+    -Dstrip=true && cd .. || exit
 
 # compile
 ninja -C "$MESA_BUILD_DIR" || exit
